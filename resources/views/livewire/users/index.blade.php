@@ -22,6 +22,7 @@ new class extends Component {
 
     public bool $drawer = false;
 
+    #[Session]
     public array $sortBy = ['column' => 'name', 'direction' => 'asc'];
 
     public int $filterCount = 0; // Property for number of filters
@@ -45,19 +46,14 @@ new class extends Component {
     // Table headers
     public function headers(): array
     {
-        return [
-            ['key' => 'id', 'label' => '#', 'class' => 'w-1'],
-            ['key' => 'name', 'label' => 'Name', 'class' => 'w-64'],
-            ['key' => 'country_name', 'label' => 'Country', 'class' => 'hidden lg:table-cell'],
-            ['key' => 'email', 'label' => 'E-mail', 'sortable' => false]
-        ];
+        return [['key' => 'avatar', 'label' => '', 'class' => 'w-1'], ['key' => 'id', 'label' => '#', 'class' => 'w-1'], ['key' => 'name', 'label' => 'Name', 'class' => 'w-64'], ['key' => 'country_name', 'label' => 'Country', 'class' => 'hidden lg:table-cell'], ['key' => 'email', 'label' => 'E-mail', 'sortable' => false]];
     }
 
     public function users(): LengthAwarePaginator
     {
         return User::query()
             ->withAggregate('country', 'name')
-            ->when($this->search, fn(Builder $q) => $q->where('name', 'like', "%$this->search%"))
+            ->when($this->search, fn(Builder $q) => $q->where('name', 'ILIKE', "%$this->search%"))
             ->when($this->country_id, fn(Builder $q) => $q->where('country_id', $this->country_id))
             ->orderBy(...array_values($this->sortBy))
             ->paginate(5);
@@ -100,14 +96,16 @@ new class extends Component {
 
 <div>
     <!-- HEADER -->
-    <x-header title="Hello" separator progress-indicator>
+    <x-header title="Users" separator progress-indicator>
         {{--
         <x-slot:middle class="!justify-end">
             <x-input placeholder="Search..." wire:model.live.debounce="search" clearable icon="o-magnifying-glass" />
         </x-slot:middle>
         --}}
         <x-slot:actions>
-            <x-button label="Filters" @click="$wire.drawer=true" responsive icon="o-funnel" badge="{{ $filterCount }}" badge-classes="badge-primary" />
+            <x-button label="Filters" @click="$wire.drawer=true" responsive icon="o-funnel" badge="{{ $filterCount }}"
+                badge-classes="badge-primary" />
+            <x-button label="Create" link="/users/create" responsive icon="o-plus" class="btn-primary" />
         </x-slot:actions>
     </x-header>
 
@@ -115,7 +113,7 @@ new class extends Component {
     <x-drawer wire:model="drawer" title="Filters" right separator with-close-button class="lg:w-1/3">
         <div class="grid gap-5">
             <x-input placeholder="Search..." wire:model.live.debounce="search" icon="o-magnifying-glass"
-                @keydown.enter="$wire.drawer = false" />
+                @keydown.enter="$wire.drawer=false" />
             <x-select placeholder="Country" wire:model.live="country_id" :options="$countries" icon="o-flag"
                 placeholder-value="0" />
         </div>
@@ -128,7 +126,10 @@ new class extends Component {
 
     <!-- TABLE  -->
     <x-card>
-        <x-table :headers="$headers" :rows="$users" :sort-by="$sortBy" with-pagination>
+        <x-table :headers="$headers" :rows="$users" :sort-by="$sortBy" with-pagination link="users/{id}/edit">
+            @scope('cell_avatar', $user)
+                <x-avatar image="{{ $user->avatar ?? '/empty-user.jpg' }}" class="!w-10" />
+            @endscope
             @scope('actions', $user)
                 <x-button icon="o-trash" wire:click="delete({{ $user['id'] }})" wire:confirm="Are you sure?" spinner
                     class="btn-ghost btn-sm text-red-500" />
