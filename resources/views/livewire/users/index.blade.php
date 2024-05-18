@@ -25,6 +25,7 @@ new class extends Component {
     #[Session]
     public array $sortBy = ['column' => 'name', 'direction' => 'asc'];
 
+    #[Session]
     public int $filterCount = 0; // Property for number of filters
 
     // Clear filters

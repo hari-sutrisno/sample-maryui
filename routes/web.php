@@ -3,6 +3,7 @@
 use Livewire\Volt\Volt;
 
 Volt::route('/login', 'login')->name('login');
+
 Volt::route('/register', 'register');
 
 Route::get('/logout', function() {

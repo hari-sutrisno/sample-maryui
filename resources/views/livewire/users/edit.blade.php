@@ -22,6 +22,9 @@ new class extends Component {
     #[Rule('sometimes')]
     public ?int $country_id = null;
 
+    #[Rule('required')]
+    public int $active = 0;
+
     #[Rule('nullable|image|max:1024')]
     public $photo;
 
@@ -65,6 +68,19 @@ new class extends Component {
     }
 }; ?>
 
+@php
+    $status = [
+        [
+            'id' => 1,
+            'name' => 'Active',
+        ],
+        [
+            'id' => 0,
+            'name' => 'Inactive',
+        ],
+    ];
+@endphp
+
 <div>
     <x-header title="Update {{ $user->name }}" separator />
 
@@ -83,6 +99,7 @@ new class extends Component {
                         <x-input label="Name" wire:model="name" />
                         <x-input label="Email" wire:model="email" />
                         <x-select label="Country" wire:model="country_id" :options="$countries" placeholder="---" />
+                        <x-select label="Status" :options="$status" wire:model="active" />
                     </div>
                 </div>
 

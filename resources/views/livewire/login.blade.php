@@ -1,7 +1,8 @@
 <?php
 
+use App\Livewire\Forms\LoginForm;
+use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Rule;
 use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 
@@ -10,11 +11,7 @@ new
 #[Title('Login')]
 
 class extends Component {
-    #[Rule('required|email')]
-    public string $email = '';
-
-    #[Rule('required')]
-    public string $password = '';
+    public LoginForm $form;
 
     public function mount()
     {
@@ -23,17 +20,12 @@ class extends Component {
         }
     }
 
-    public function login()
+    public function submit()
     {
-        $credentials = $this->validate();
-
-        if (auth()->attempt($credentials)) {
-            request()->session()->regenerate();
-
-            return redirect()->intended('/');
-        }
-
-        $this->addError('email', 'The provided credentials do not match our records.');
+        $this->validate();
+        $this->form->authenticate();
+        Session::regenerate();
+        return redirect('/');
     }
 }; ?>
 
@@ -41,9 +33,12 @@ class extends Component {
 <div class="md:w-96 mx-auto mt-20">
     <div class="mb-10">Cool image here</div>
 
-    <x-form wire:submit="login">
-        <x-input label="E-mail" wire:model="email" icon="o-envelope" inline />
-        <x-input label="Password" wire:model="password" type="password" icon="o-key" inline />
+    <x-form wire:submit="submit">
+        <x-input label="E-mail" wire:model="form.email" icon="o-envelope" inline />
+        <x-input label="Password" wire:model="form.password" type="password" icon="o-key" inline />
+        <div class="flex justify-end gap-3">
+            <x-checkbox label="Remember Me" wire:model="form.remember" inline />
+        </div>
 
         <x-slot:actions>
             <x-button label="Create an account" link="/register" />
